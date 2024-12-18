@@ -52,9 +52,56 @@ install_inspireircd() {
 
 # Configure InspireIRCd
 configure_inspireircd() {
-    echo "Configuring InspireIRCd..."
-    # Assume you manually edit the InspireIRCd configuration (inspirercd.conf) to bind to 127.0.0.1:6667.
-    echo "Please configure the inspirercd.conf to bind to 127.0.0.1, [::1] port 6667."
+    echo "Generating inspireircd.conf for InspireIRCd..."
+
+    # Generate a default inspirercd.conf file for the IRC server with Tor hidden service
+    cat <<EOF > inspirercd.conf
+# InspireIRCd Configuration File
+serverinfo {
+    name = "MyIRCServer";
+    listen {
+        address = "127.0.0.1";
+        port = 6667;
+    };
+};
+
+# Set up the IRC server to bind to the local loopback address (127.0.0.1)
+listen {
+    address = "127.0.0.1";
+    port = 6667;
+    ipv6 = false;
+};
+
+# Enable SSL and other security settings (optional, adjust to your needs)
+# ssl {
+#    enable = true;
+#    certfile = "/path/to/cert.pem";
+#    keyfile = "/path/to/key.pem";
+#    port = 6697;
+# };
+
+# Tor hidden service configuration (will forward traffic on 6667 through Tor)
+bind {
+    address = "127.0.0.1";
+    port = 6667;
+    protocol = "IRC";
+};
+
+# Accept connections on the hidden Tor service
+hidden_service {
+    port = 6667;
+    target = "127.0.0.1:6667";
+};
+
+# Additional configurations
+user {
+    username = "ircuser";
+    password = "securepassword";
+};
+EOF
+    check_status
+
+    echo "inspirercd.conf has been generated successfully."
 }
 
 # Add Tor hidden service configuration
@@ -80,7 +127,7 @@ RUN apt update && \
     apt install -y inspireircd tor && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy your IRC server configuration into the container
+# Copy the generated IRC server configuration file
 COPY inspirercd.conf /etc/inspireircd/
 
 # Expose the IRC port
