@@ -41,20 +41,20 @@ test_tor_connection() {
     check_status
 }
 
-# Install UnrealIRCd
-install_unrealircd() {
-    echo "Installing UnrealIRCd..."
+# Install InspireIRCd
+install_inspireircd() {
+    echo "Installing InspireIRCd..."
     sudo apt update
     check_status
-    sudo apt install -y unrealircd
+    sudo apt install -y inspireircd
     check_status
 }
 
-# Configure UnrealIRCd
-configure_unrealircd() {
-    echo "Configuring UnrealIRCd..."
-    # Assume you manually edit the UnrealIRCd configuration (unrealircd.conf) to bind to 127.0.0.1:6667.
-    echo "Please configure the unrealircd.conf to bind to 127.0.0.1, [::1] port 6667."
+# Configure InspireIRCd
+configure_inspireircd() {
+    echo "Configuring InspireIRCd..."
+    # Assume you manually edit the InspireIRCd configuration (inspirercd.conf) to bind to 127.0.0.1:6667.
+    echo "Please configure the inspirercd.conf to bind to 127.0.0.1, [::1] port 6667."
 }
 
 # Add Tor hidden service configuration
@@ -69,25 +69,25 @@ configure_tor_hidden_service() {
     echo "Tor hidden service hostname: $(cat /var/lib/tor/hidden_service/hostname)"
 }
 
-# Create Dockerfile for UnrealIRCd and Tor
+# Create Dockerfile for InspireIRCd and Tor
 create_dockerfile() {
-    echo "Creating Dockerfile for UnrealIRCd and Tor..."
+    echo "Creating Dockerfile for InspireIRCd and Tor..."
     cat <<EOF > Dockerfile
 FROM debian:bullseye-slim
 
 # Install necessary packages
 RUN apt update && \
-    apt install -y unrealircd tor && \
+    apt install -y inspireircd tor && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy your IRC server configuration into the container
-COPY unrealircd.conf /etc/unrealircd/
+COPY inspirercd.conf /etc/inspireircd/
 
 # Expose the IRC port
 EXPOSE 6667
 
 # Start both Tor and the IRC server
-CMD tor & unrealircd
+CMD tor & inspireircd
 EOF
     check_status
 }
@@ -95,7 +95,7 @@ EOF
 # Build Docker image
 build_docker_image() {
     echo "Building Docker image..."
-    docker build -t unrealircd-tor .
+    docker build -t inspireircd-tor .
     check_status
 }
 
@@ -119,7 +119,7 @@ spec:
     spec:
       containers:
         - name: ircd-tor
-          image: unrealircd-tor:latest
+          image: inspireircd-tor:latest
           ports:
             - containerPort: 6667
           securityContext:
@@ -188,7 +188,6 @@ get_pod_logs() {
     check_status
 }
 
-
 # Tail Tor logs
 tail_tor_logs() {
     echo "Tailing Tor logs..."
@@ -201,8 +200,8 @@ main() {
     install_k3s
     install_tor
     test_tor_connection
-    install_unrealircd
-    configure_unrealircd
+    install_inspireircd
+    configure_inspireircd
     configure_tor_hidden_service
     create_dockerfile
     build_docker_image
