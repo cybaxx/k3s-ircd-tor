@@ -171,12 +171,23 @@ apply_kubernetes_service() {
     check_status
 }
 
-# Fetch pod logs
+# Fetch pod logs dynamically
 get_pod_logs() {
-    echo "Fetching pod logs..."
-    kubectl logs <pod-name>
+    log_info "Fetching pod logs..."
+
+    # Define the label selector (or pod name pattern) to find the correct pod
+    POD_NAME=$(kubectl get pods --selector=app=ircd-tor -o jsonpath='{.items[0].metadata.name}')
+
+    if [ -z "$POD_NAME" ]; then
+        log_error "No pod found matching the selector. Exiting..."
+        exit 1
+    fi
+
+    # Fetch logs from the identified pod
+    kubectl logs "$POD_NAME"
     check_status
 }
+
 
 # Tail Tor logs
 tail_tor_logs() {
